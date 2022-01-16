@@ -28,7 +28,6 @@ def findOrderId(order):
 
 
 def findSaleInfo(order):
-    moneyInfo = order.find("div", class_="money-info")
     sale = order.findAll("div", class_="money-item flex-btw-center")
 
     # Gets the prices and replaces the $ symbol
