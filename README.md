@@ -28,7 +28,9 @@ Right click on the htlm tag and go to  "Edit as HTML",
 It opens the following tab and we copy all the htlm code using CTRL+A and CTRL+C 
 ![image](https://user-images.githubusercontent.com/96527883/149681789-bfab73dc-4cf8-4307-8b16-4ab114d2e567.png).
 Next we create a file named "orders.txt" in the same folder of the script and we paste all the code we have copied into the file:
+
 ![image](https://user-images.githubusercontent.com/96527883/149681923-3b91dce6-2527-4e27-ad8f-8ab29fadc3cf.png)
+
 Finally all we have to do is to open a terminal in the same directory of the AsosOrderTracking.py script and the orders.txt and run the following comand:
 ```sh
 python .\AsosFIFO.py
