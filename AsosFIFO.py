@@ -1,5 +1,7 @@
 from enum import Enum
+from tracemalloc import start
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 import pandas as pd
 import getopt
@@ -13,10 +15,44 @@ class SaleInfo():
         self.totalPrice = float(realPrice) + float(comision)
 
 
+class ProgramArguments():
+    def __init__(self, fileToProcess, fileNameToExport, startDate):
+        self.fileToProcess = fileToProcess
+        self.filenameToExport = fileNameToExport
+        self.startDate = startDate
+
+    def __str__(self):
+        return "FileToProcess: " + self.fileToProcess + " FileNameToExport: " + self.filenameToExport + " StartDate: " + str(self.startDate)
+
+
 class OrderType(Enum):
     TRADE = 1
     DEPOSIT = 2
     WITHDRAW = 3
+
+
+def getProgramArguments():
+    fileToProcess = "orders.txt"
+    fileNameToExport = "ordersData.xlsx"
+    startDate = None
+
+    argv = sys.argv[1:]
+
+    try:
+        opts, args = getopt.getopt(
+            argv, "f:e:s:", ["fn=", "fe=", "sd="])
+
+        for opt, arg in opts:
+            if opt in ["-f", "--fn"]:
+                fileToProcess = arg
+            elif opt in ["-e", "--fe"]:
+                fileNameToExport = arg
+            elif opt in ["-s", "--sd"]:
+                startDate = datetime.strptime(arg, "%Y-%m-%d")
+    except getopt.GetoptError as e:
+        print("ERROR: ", e)
+
+    return ProgramArguments(fileToProcess, fileNameToExport, startDate)
 
 
 def findOrderId(order):
@@ -45,8 +81,16 @@ def exportToExcel(exceldata, fileNameToExport):
 
     writer.save()
 
+    print("Orders exported succesfully")
 
-def processOrders(htmlOrders, fileNameToExport):
+
+def checkOrderToProcess(startDate, orderDate):
+    orderDateTime = datetime.strptime(orderDate, "%Y-%m-%d %H:%M:%S")
+
+    return startDate != None and orderDateTime >= startDate
+
+
+def processOrders(htmlOrders, programArguments):
     orderTypes = list()
     orderIds = list()
     dates = list()
@@ -56,31 +100,38 @@ def processOrders(htmlOrders, fileNameToExport):
 
     # Process all the orders
     for order in htmlOrders:
-        # Type. All orders will be operations for the moment
-        orderTypes.append(OrderType.TRADE.name)
-
-        # Order id
-        orderId = findOrderId(order)
-        orderIds.append(orderId)
-
         # Date
-        date = order.find("span", class_="value").text
-        dates.append(date)
+        orderDate = order.find("span", class_="value").text
 
-        saleInfo = findSaleInfo(order)
+        # Checks if the order has to be processed when we are filtering by dates
+        processOrder = checkOrderToProcess(
+            programArguments.startDate, orderDate)
 
-        # Real price
-        realPrice = saleInfo.realPrice
-        realPrices.append(realPrice)
+        if processOrder == True:
+            dates.append(orderDate)
 
-        # Comision
-        comision = saleInfo.comision
-        comisions.append(comision)
+            # Type. All orders will be operations for the moment
+            orderTypes.append(OrderType.TRADE.name)
 
-        # Total price (price + comision)
-        totalPrice = saleInfo.totalPrice
-        totalPrices.append(totalPrice)
+            # Order id
+            orderId = findOrderId(order)
+            orderIds.append(orderId)
 
+            saleInfo = findSaleInfo(order)
+
+            # Real price
+            realPrice = saleInfo.realPrice
+            realPrices.append(realPrice)
+
+            # Comision
+            comision = saleInfo.comision
+            comisions.append(comision)
+
+            # Total price (price + comision)
+            totalPrice = saleInfo.totalPrice
+            totalPrices.append(totalPrice)
+
+    # Columns and values for the excel
     exceldata = {
         "Type": orderTypes,
         "Order Id": orderIds,
@@ -91,35 +142,26 @@ def processOrders(htmlOrders, fileNameToExport):
         "Date": dates
     }
 
-    exportToExcel(exceldata, fileNameToExport)
-
-    print("Orders exported succesfully")
+    # Exports the orders data to excel
+    exportToExcel(exceldata, programArguments.filenameToExport)
 
     file.close()
 
 
 try:
-    fileToProcess = "orders.txt"
-    fileNameToExport = "ordersData.xlsx"
+    programArguments = getProgramArguments()
 
-    argv = sys.argv[1:]
-    opts, args = getopt.getopt(argv, "f:e:")
-
-    for opt, arg in opts:
-        if opt in ["-f"]:
-            fileToProcess = arg
-        elif opt in ["-e"]:
-            fileNameToExport = arg
-
-    file = open(fileToProcess)
+    # Opens the .txt with the html code
+    file = open(programArguments.fileToProcess)
     soup = BeautifulSoup(file.read(), "html.parser")
 
+    # Gets all the orders in the html
     htmlOrders = soup.findAll("li", class_="task-item")
 
-    processOrders(htmlOrders, fileNameToExport)
+    processOrders(htmlOrders, programArguments)
 
 
 except FileNotFoundError:
-    print("File " + fileToProcess + " not found.")
+    print("File " + programArguments.fileToProcess + " not found.")
 except PermissionError:
     print("You have to close your current open excel to export new data")
