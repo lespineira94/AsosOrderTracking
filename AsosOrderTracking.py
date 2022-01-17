@@ -1,5 +1,4 @@
 from enum import Enum
-from tracemalloc import start
 from bs4 import BeautifulSoup
 from datetime import datetime
 
@@ -87,7 +86,7 @@ def exportToExcel(exceldata, fileNameToExport):
 def checkOrderToProcess(startDate, orderDate):
     orderDateTime = datetime.strptime(orderDate, "%Y-%m-%d %H:%M:%S")
 
-    return startDate != None and orderDateTime >= startDate
+    return startDate == None or orderDateTime >= startDate
 
 
 def processOrders(htmlOrders, programArguments):
