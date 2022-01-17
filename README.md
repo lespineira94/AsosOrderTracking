@@ -19,6 +19,7 @@ For datasets management and exports
 pip install pandas
 ```
 
+# Tutorial
 After all depdencies are installed we have to take the html code of the orders to scrapp and process all the orders and create a file named orders.txt with the html. The script will process only the orders we see on screen, so you will need to scroll down all the orders you want to process
 So first we go to the orders tab and right click and go to inspect:
 ![image](https://user-images.githubusercontent.com/96527883/149680623-ca4d4433-c472-477e-a008-85371b9bc44f.png)
@@ -47,3 +48,5 @@ There are other usefull parameters like:
 Once we run the script we will get an excel with the resume of all of our buys and sells, comissions and prices of the orders that we did in the aplication:
 
 ![image](https://user-images.githubusercontent.com/96527883/149682705-a107a7f9-9d09-4d27-9af6-0e75720d41db.png)
+
+https://user-images.githubusercontent.com/96527883/149800587-2936f489-bb8a-4302-8474-d0f80c2b346a.mp4
